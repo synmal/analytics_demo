@@ -1,0 +1,1 @@
+Sg = SendGrid::API.new(api_key: Rails.application.credentials.sendgrid[:api_key])
