@@ -1,0 +1,27 @@
+<h1>SendGrid Analytics</h1>
+<table>
+  <thead>
+    <tr>
+      <td>Date</td>
+      <td>Blocks</td>
+      <td>Bounce Drops</td>
+      <td>Bounces</td>
+      <td>Clicks</td>
+      <td>Deferred</td>
+      <td>Delivered</td>
+      <td>Invalid Emails</td>
+      <td>Opens</td>
+      <td>Processed</td>
+      <td>Requests</td>
+      <td>Spam Report Drops</td>
+      <td>Spam Reports</td>
+      <td>Unique Clicks</td>
+      <td>Unique Opens</td>
+      <td>Unsubscribe Drops</td>
+      <td>Unsubscribes</td>
+    </tr>
+  </thead>
+  <tbody>
+    <%= render partial: 'data_list', collection: @response, as: :response %>
+  </tbody>
+</table>
