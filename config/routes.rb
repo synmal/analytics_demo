@@ -2,6 +2,6 @@ Rails.application.routes.draw do
   root 'home#index'
 
   namespace :analytics do
-    resource :sendgrid, controller: 'sendgrid', only: :show
+    resources :sendgrid_single_sends, only: [:index, :show]
   end
 end
