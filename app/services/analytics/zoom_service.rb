@@ -1,4 +1,4 @@
-class ZoomService
+class Analytics::ZoomService
   class << self
     def get_webinar_lists
       url = "https://api.zoom.us/v2/users/#{Rails.application.credentials.zoom[:user_id]}/webinars"
