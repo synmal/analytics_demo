@@ -1,0 +1,43 @@
+<h1>Facebook Page Posts</h1>
+<% @posts[:data].each do |post| %>
+  <div>
+    ID: <%= post[:id] %>
+  </div>
+  <div>
+    Text content: <%= post[:message] %>
+  </div>
+  <% if post.dig(:attachments, :data) %>
+    <div>
+      Media: <br />
+      <% post.dig(:attachments, :data).each do |att| %>
+        <%= image_tag att.dig(:media, :image, :src) %>
+      <% end %>
+    </div>
+  <% end %>
+  <table>
+    <thead>
+      <td>Engaged Users</td>
+      <td>Negative Feedback</td>
+      <td>Unique Negative Feedback</td>
+      <td>Clicks</td>
+      <td>Unique Clicks</td>
+      <td>Engaged Fans</td>
+      <td>Impressions</td>
+      <td>Unique Impressions</td>
+      <td>Paid Impressions</td>
+      <td>Organic Impressions</td>
+      <td>Unique Organic Impressions</td>
+      <td>Reactions</td>
+    </thead>
+    <tbody>
+      <tr>
+        <% post.dig(:insights, :data).each do |ins| %>
+          <td>
+            <%= ins[:values].first[:value] %>
+          </td>
+        <% end %>
+      </tr>
+    </tbody>
+  </table>
+  <hr/>
+<% end %>
