@@ -33,3 +33,8 @@ class Analytics::ZoomService
     end
   end
 end
+
+# G analytics
+# Zoom
+# Youtube
+# Facebook ads
