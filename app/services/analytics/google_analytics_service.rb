@@ -3,30 +3,47 @@ class Analytics::GoogleAnalyticsService
   class << self
     SCOPE = 'https://www.googleapis.com/auth/analytics.readonly'
     METRICS = [
-      'ga:users',
-      'ga:newUsers',
-      'ga:sessions',
-      'ga:bounces',
-      'ga:bounceRate',
-      'ga:pageviews',
-      'ga:hits',
-      'ga:organicSearches'
+      # 'ga:users'
+      # 'ga:newUsers'
+      # 'ga:sessions',
+      # 'ga:bounces',
+      # 'ga:bounceRate'
+      # 'ga:pageviews',
+      # 'ga:hits',
+      # 'ga:organicSearches'
+      'ga:pageviews'
+    ]
+
+    DIMENSIONS = [
+      # 'ga:userType'
+      # 'ga:acquisitionTrafficChannel'
+      # 'ga:sourceMedium',
+      # 'ga:keyword'
+      # 'ga:browser'
+      # 'ga:pagePath'
+      'ga:pagePath'
     ]
 
     def get_data
       analytics = set_auth
 
-      date_range = Google::Apis::AnalyticsreportingV4::DateRange.new(start_date: '7DaysAgo', end_date: 'today')
+      # date_range = Google::Apis::AnalyticsreportingV4::DateRange.new(start_date: '7DaysAgo', end_date: 'today')
 
       request = Google::Apis::AnalyticsreportingV4::GetReportsRequest.new(
-        report_requests: [Google::Apis::AnalyticsreportingV4::ReportRequest.new(
-          view_id: '215727737',
-          metrics: generate_metric,
-          date_ranges: [date_range]
-        )]
+        {
+          report_requests: [
+            Google::Apis::AnalyticsreportingV4::ReportRequest.new(
+              view_id: '215727737',
+              sampling_level: 'LARGE',
+              metrics: generate_metric,
+              dimensions: generate_dimensions,
+              order_bys: [Google::Apis::AnalyticsreportingV4::OrderBy.new(sort_order: 'DESCENDING', field_name: 'ga:pageviews')]
+            )
+          ]
+        }
       )
 
-      response = analytics.batch_get_reports(request)
+      analytics.batch_get_reports(request)
     end
     
     def set_auth
@@ -39,6 +56,12 @@ class Analytics::GoogleAnalyticsService
     def generate_metric
       METRICS.map do |metric|
         Google::Apis::AnalyticsreportingV4::Metric.new(expression: metric)
+      end
+    end
+
+    def generate_dimensions
+      DIMENSIONS.map do |dim|
+        Google::Apis::AnalyticsreportingV4::Dimension.new(name: dim)
       end
     end
   end
