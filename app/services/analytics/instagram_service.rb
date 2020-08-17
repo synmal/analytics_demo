@@ -1,9 +1,11 @@
 class Analytics::InstagramService
   class << self
     def get_posts
-      fields = 'website,insights.metric(website_clicks).period(day)'
-      response = call(fields)
-      parse_response(response)
+      response = get_ig_posts_with_insights
+      if response[:error]
+        response = get_ig_posts
+      end
+      response
     end
 
     private
@@ -16,6 +18,18 @@ class Analytics::InstagramService
 
     def parse_response(response)
       JSON.parse(response.body, symbolize_names: true)
+    end
+
+    def get_ig_posts_with_insights
+      fields = 'media.limit(100){id, permalink, comments_count, like_count, insights.metric(engagement,impressions,reach,saved,video_views)}'
+      response = call(fields)
+      parse_response(response)
+    end
+
+    def get_ig_posts
+      fields = 'media.limit(100){id, permalink, comments_count, like_count}'
+      response = call(fields)
+      parse_response(response)
     end
   end
 end
