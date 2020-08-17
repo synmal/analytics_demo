@@ -5,7 +5,7 @@ class Analytics::ZoomService
       webinars.map do |web|
         stats = get_webinar_stats(web[:id])
         {
-          stats: stats[:topic],
+          topic: stats[:topic],
           start_time: date_convert(stats[:start_time]),
           end_time: date_convert(stats[:end_time]),
           total_minutes: stats[:total_minutes],
