@@ -12,25 +12,25 @@ class Analytics::FacebookPageService
     'post_impressions',
     'post_impressions_unique',
     'post_impressions_paid',
-    # 'post_impressions_paid_unique',
-    # 'post_impressions_fan',
-    # 'post_impressions_fan_unique',
-    # 'post_impressions_fan_paid',
-    # 'post_impressions_fan_paid_unique',
+    'post_impressions_paid_unique',
+    'post_impressions_fan',
+    'post_impressions_fan_unique',
+    'post_impressions_fan_paid',
+    'post_impressions_fan_paid_unique',
     'post_impressions_organic',
     'post_impressions_organic_unique',
-    # 'post_impressions_viral',
-    # 'post_impressions_viral_unique',
-    # 'post_impressions_nonviral',
-    # 'post_impressions_nonviral_unique',
+    'post_impressions_viral',
+    'post_impressions_viral_unique',
+    'post_impressions_nonviral',
+    'post_impressions_nonviral_unique',
     # 'post_impressions_by_story_type',
     # 'post_impressions_by_story_type_unique',
-    'post_reactions_by_type_total'
+    # 'post_reactions_by_type_total'
   ]
 
   class << self
     def get_posts
-      fields = "message,attachments,insights.metric(#{LIFETIME_INSIGHTS.join(',')}){name, values}"
+      fields = "permalink_url,message,attachments,insights.metric(#{LIFETIME_INSIGHTS.join(',')}){name, values}"
       response = call(fields)
       parse_response(response)
     end

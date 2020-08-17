@@ -9,9 +9,9 @@ class GSheets::SheetsService
     def push_data
       sheets_service = set_auth
       # zoom_analytics(sheets_service)
-      sendgrid_analytics(sheets_service)
-      # value_range_object = Google::Apis::SheetsV4::ValueRange.new(values: generate_test)
-      # sheets_service.append_spreadsheet_value(SPREADSHEET_ID, 'Sendgrid!A1', value_range_object, value_input_option: 'RAW')
+      # sendgrid_analytics(sheets_service)
+      # facebook_analytics(sheets_service)
+      google_analytics(sheets_service)
     end
 
     def set_auth
@@ -41,6 +41,324 @@ class GSheets::SheetsService
 
       value_range_object = Google::Apis::SheetsV4::ValueRange.new(values: analytics_stats)
       sheets.append_spreadsheet_value(SPREADSHEET_ID, 'Sendgrid!A1', value_range_object, value_input_option: 'RAW')
+    end
+
+    def facebook_analytics(sheets)
+      response = Analytics::FacebookPageService.get_posts
+      facebook_analytics = response[:data].map do |resp|
+        row = []
+        row << resp[:permalink_url]
+        row << resp[:message]
+        resp.dig(:insights, :data).each do |ins|
+          row << ins[:values].first[:value]
+        end
+        row
+      end
+
+      value_range_object = Google::Apis::SheetsV4::ValueRange.new(values: facebook_analytics)
+      sheets.append_spreadsheet_value(SPREADSHEET_ID, 'Facebook!A1', value_range_object, value_input_option: 'RAW')
+    end
+
+    def google_analytics(sheets)
+      analytics = Analytics::GoogleAnalyticsService.get_data
+      analytics_stats = analytics.reports.first.data.totals.first.values
+      analytics_stats.unshift("#{(Date.today - 7.days).strftime('%d %B %Y')} - #{Date.today.strftime('%d %B %Y')}")
+      value_range_object = Google::Apis::SheetsV4::ValueRange.new(values: [analytics_stats])
+      sheets.append_spreadsheet_value(SPREADSHEET_ID, 'Google Analytics!A1', value_range_object, value_input_option: 'RAW')
+    end
+
+    def dummy_data
+      {:data=>
+        [{:permalink_url=>
+           "https://www.facebook.com/109726977412856/posts/153221506396736/",
+          :attachments=>
+           {:data=>
+             [{:media=>
+                {:image=>
+                  {:height=>524,
+                   :src=>
+                    "https://scontent.fkul15-1.fna.fbcdn.net/v/t1.0-9/s720x720/117375534_153221469730073_7856084438448405321_n.jpg?_nc_cat=109&_nc_sid=110474&_nc_ohc=MOTGcTHxUBsAX9Xod4M&_nc_ht=scontent.fkul15-1.fna&_nc_tp=7&oh=11c4efba3a0a8d92fd4a56d00c9633c1&oe=5F615654",
+                   :width=>720}},
+               :target=>
+                {:id=>"153221466396740",
+                 :url=>
+                  "https://www.facebook.com/109726977412856/photos/a.153221496396737/153221466396740/?type=3"},
+               :type=>"photo",
+               :url=>
+                "https://www.facebook.com/109726977412856/photos/a.153221496396737/153221466396740/?type=3"}]},
+          :insights=>
+           {:data=>
+             [{:name=>"post_engaged_users",
+               :values=>[{:value=>1}],
+               :id=>
+                "109726977412856_153221506396736/insights/post_engaged_users/lifetime"},
+              {:name=>"post_negative_feedback",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153221506396736/insights/post_negative_feedback/lifetime"},
+              {:name=>"post_negative_feedback_unique",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153221506396736/insights/post_negative_feedback_unique/lifetime"},
+              {:name=>"post_clicks",
+               :values=>[{:value=>1}],
+               :id=>"109726977412856_153221506396736/insights/post_clicks/lifetime"},
+              {:name=>"post_clicks_unique",
+               :values=>[{:value=>1}],
+               :id=>
+                "109726977412856_153221506396736/insights/post_clicks_unique/lifetime"},
+              {:name=>"post_engaged_fan",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153221506396736/insights/post_engaged_fan/lifetime"},
+              {:name=>"post_impressions",
+               :values=>[{:value=>1}],
+               :id=>
+                "109726977412856_153221506396736/insights/post_impressions/lifetime"},
+              {:name=>"post_impressions_unique",
+               :values=>[{:value=>1}],
+               :id=>
+                "109726977412856_153221506396736/insights/post_impressions_unique/lifetime"},
+              {:name=>"post_impressions_paid",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153221506396736/insights/post_impressions_paid/lifetime"},
+              {:name=>"post_impressions_paid_unique",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153221506396736/insights/post_impressions_paid_unique/lifetime"},
+              {:name=>"post_impressions_fan",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153221506396736/insights/post_impressions_fan/lifetime"},
+              {:name=>"post_impressions_fan_unique",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153221506396736/insights/post_impressions_fan_unique/lifetime"},
+              {:name=>"post_impressions_fan_paid",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153221506396736/insights/post_impressions_fan_paid/lifetime"},
+              {:name=>"post_impressions_fan_paid_unique",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153221506396736/insights/post_impressions_fan_paid_unique/lifetime"},
+              {:name=>"post_impressions_organic",
+               :values=>[{:value=>1}],
+               :id=>
+                "109726977412856_153221506396736/insights/post_impressions_organic/lifetime"},
+              {:name=>"post_impressions_organic_unique",
+               :values=>[{:value=>1}],
+               :id=>
+                "109726977412856_153221506396736/insights/post_impressions_organic_unique/lifetime"},
+              {:name=>"post_impressions_viral",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153221506396736/insights/post_impressions_viral/lifetime"},
+              {:name=>"post_impressions_viral_unique",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153221506396736/insights/post_impressions_viral_unique/lifetime"},
+              {:name=>"post_impressions_nonviral",
+               :values=>[{:value=>1}],
+               :id=>
+                "109726977412856_153221506396736/insights/post_impressions_nonviral/lifetime"},
+              {:name=>"post_impressions_nonviral_unique",
+               :values=>[{:value=>1}],
+               :id=>
+                "109726977412856_153221506396736/insights/post_impressions_nonviral_unique/lifetime"}],
+            :paging=>
+             {:previous=>
+               "https://graph.facebook.com/v7.0/109726977412856_153221506396736/insights?access_token=EAAsjz6AuZBbEBAJH9nt4fswMs9rBe9r7GO9XAKA8Iwz8i5nDxZBWwiqGAkzHdeOTSnzxjhi53aqWdAkgrZBWXWOz76wng3W6Ic52z8brJ5Mz9ZB5hBGZB75CHnDb1sTnXq7Rm8GKRRx48ERBJZCBpaHV2ZB1qflWtXxxujHV8iSZBJUhnE1AUn6RqfnjokbowLsZD&fields=name%2C+values&metric=post_engaged_users%2Cpost_negative_feedback%2Cpost_negative_feedback_unique%2Cpost_clicks%2Cpost_clicks_unique%2Cpost_engaged_fan%2Cpost_impressions%2Cpost_impressions_unique%2Cpost_impressions_paid%2Cpost_impressions_paid_unique%2Cpost_impressions_fan%2Cpost_impressions_fan_unique%2Cpost_impressions_fan_paid%2Cpost_impressions_fan_paid_unique%2Cpost_impressions_organic%2Cpost_impressions_organic_unique%2Cpost_impressions_viral%2Cpost_impressions_viral_unique%2Cpost_impressions_nonviral%2Cpost_impressions_nonviral_unique&since=1597042800&until=1597215600",
+              :next=>
+               "https://graph.facebook.com/v7.0/109726977412856_153221506396736/insights?access_token=EAAsjz6AuZBbEBAJH9nt4fswMs9rBe9r7GO9XAKA8Iwz8i5nDxZBWwiqGAkzHdeOTSnzxjhi53aqWdAkgrZBWXWOz76wng3W6Ic52z8brJ5Mz9ZB5hBGZB75CHnDb1sTnXq7Rm8GKRRx48ERBJZCBpaHV2ZB1qflWtXxxujHV8iSZBJUhnE1AUn6RqfnjokbowLsZD&fields=name%2C+values&metric=post_engaged_users%2Cpost_negative_feedback%2Cpost_negative_feedback_unique%2Cpost_clicks%2Cpost_clicks_unique%2Cpost_engaged_fan%2Cpost_impressions%2Cpost_impressions_unique%2Cpost_impressions_paid%2Cpost_impressions_paid_unique%2Cpost_impressions_fan%2Cpost_impressions_fan_unique%2Cpost_impressions_fan_paid%2Cpost_impressions_fan_paid_unique%2Cpost_impressions_organic%2Cpost_impressions_organic_unique%2Cpost_impressions_viral%2Cpost_impressions_viral_unique%2Cpost_impressions_nonviral%2Cpost_impressions_nonviral_unique&since=1597388400&until=1597561200"}},
+          :id=>"109726977412856_153221506396736"},
+         {:permalink_url=>
+           "https://www.facebook.com/109726977412856/posts/153220469730173/",
+          :message=>"Test testTTTT",
+          :insights=>
+           {:data=>
+             [{:name=>"post_engaged_users",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153220469730173/insights/post_engaged_users/lifetime"},
+              {:name=>"post_negative_feedback",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153220469730173/insights/post_negative_feedback/lifetime"},
+              {:name=>"post_negative_feedback_unique",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153220469730173/insights/post_negative_feedback_unique/lifetime"},
+              {:name=>"post_clicks",
+               :values=>[{:value=>0}],
+               :id=>"109726977412856_153220469730173/insights/post_clicks/lifetime"},
+              {:name=>"post_clicks_unique",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153220469730173/insights/post_clicks_unique/lifetime"},
+              {:name=>"post_engaged_fan",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153220469730173/insights/post_engaged_fan/lifetime"},
+              {:name=>"post_impressions",
+               :values=>[{:value=>1}],
+               :id=>
+                "109726977412856_153220469730173/insights/post_impressions/lifetime"},
+              {:name=>"post_impressions_unique",
+               :values=>[{:value=>1}],
+               :id=>
+                "109726977412856_153220469730173/insights/post_impressions_unique/lifetime"},
+              {:name=>"post_impressions_paid",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153220469730173/insights/post_impressions_paid/lifetime"},
+              {:name=>"post_impressions_paid_unique",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153220469730173/insights/post_impressions_paid_unique/lifetime"},
+              {:name=>"post_impressions_fan",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153220469730173/insights/post_impressions_fan/lifetime"},
+              {:name=>"post_impressions_fan_unique",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153220469730173/insights/post_impressions_fan_unique/lifetime"},
+              {:name=>"post_impressions_fan_paid",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153220469730173/insights/post_impressions_fan_paid/lifetime"},
+              {:name=>"post_impressions_fan_paid_unique",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153220469730173/insights/post_impressions_fan_paid_unique/lifetime"},
+              {:name=>"post_impressions_organic",
+               :values=>[{:value=>1}],
+               :id=>
+                "109726977412856_153220469730173/insights/post_impressions_organic/lifetime"},
+              {:name=>"post_impressions_organic_unique",
+               :values=>[{:value=>1}],
+               :id=>
+                "109726977412856_153220469730173/insights/post_impressions_organic_unique/lifetime"},
+              {:name=>"post_impressions_viral",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153220469730173/insights/post_impressions_viral/lifetime"},
+              {:name=>"post_impressions_viral_unique",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153220469730173/insights/post_impressions_viral_unique/lifetime"},
+              {:name=>"post_impressions_nonviral",
+               :values=>[{:value=>1}],
+               :id=>
+                "109726977412856_153220469730173/insights/post_impressions_nonviral/lifetime"},
+              {:name=>"post_impressions_nonviral_unique",
+               :values=>[{:value=>1}],
+               :id=>
+                "109726977412856_153220469730173/insights/post_impressions_nonviral_unique/lifetime"}],
+            :paging=>
+             {:previous=>
+               "https://graph.facebook.com/v7.0/109726977412856_153220469730173/insights?access_token=EAAsjz6AuZBbEBAJH9nt4fswMs9rBe9r7GO9XAKA8Iwz8i5nDxZBWwiqGAkzHdeOTSnzxjhi53aqWdAkgrZBWXWOz76wng3W6Ic52z8brJ5Mz9ZB5hBGZB75CHnDb1sTnXq7Rm8GKRRx48ERBJZCBpaHV2ZB1qflWtXxxujHV8iSZBJUhnE1AUn6RqfnjokbowLsZD&fields=name%2C+values&metric=post_engaged_users%2Cpost_negative_feedback%2Cpost_negative_feedback_unique%2Cpost_clicks%2Cpost_clicks_unique%2Cpost_engaged_fan%2Cpost_impressions%2Cpost_impressions_unique%2Cpost_impressions_paid%2Cpost_impressions_paid_unique%2Cpost_impressions_fan%2Cpost_impressions_fan_unique%2Cpost_impressions_fan_paid%2Cpost_impressions_fan_paid_unique%2Cpost_impressions_organic%2Cpost_impressions_organic_unique%2Cpost_impressions_viral%2Cpost_impressions_viral_unique%2Cpost_impressions_nonviral%2Cpost_impressions_nonviral_unique&since=1597042800&until=1597215600",
+              :next=>
+               "https://graph.facebook.com/v7.0/109726977412856_153220469730173/insights?access_token=EAAsjz6AuZBbEBAJH9nt4fswMs9rBe9r7GO9XAKA8Iwz8i5nDxZBWwiqGAkzHdeOTSnzxjhi53aqWdAkgrZBWXWOz76wng3W6Ic52z8brJ5Mz9ZB5hBGZB75CHnDb1sTnXq7Rm8GKRRx48ERBJZCBpaHV2ZB1qflWtXxxujHV8iSZBJUhnE1AUn6RqfnjokbowLsZD&fields=name%2C+values&metric=post_engaged_users%2Cpost_negative_feedback%2Cpost_negative_feedback_unique%2Cpost_clicks%2Cpost_clicks_unique%2Cpost_engaged_fan%2Cpost_impressions%2Cpost_impressions_unique%2Cpost_impressions_paid%2Cpost_impressions_paid_unique%2Cpost_impressions_fan%2Cpost_impressions_fan_unique%2Cpost_impressions_fan_paid%2Cpost_impressions_fan_paid_unique%2Cpost_impressions_organic%2Cpost_impressions_organic_unique%2Cpost_impressions_viral%2Cpost_impressions_viral_unique%2Cpost_impressions_nonviral%2Cpost_impressions_nonviral_unique&since=1597388400&until=1597561200"}},
+          :id=>"109726977412856_153220469730173"},
+         {:permalink_url=>
+           "https://www.facebook.com/109726977412856/posts/153207216398165/",
+          :message=>"TESTTTT",
+          :insights=>
+           {:data=>
+             [{:name=>"post_engaged_users",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153207216398165/insights/post_engaged_users/lifetime"},
+              {:name=>"post_negative_feedback",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153207216398165/insights/post_negative_feedback/lifetime"},
+              {:name=>"post_negative_feedback_unique",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153207216398165/insights/post_negative_feedback_unique/lifetime"},
+              {:name=>"post_clicks",
+               :values=>[{:value=>0}],
+               :id=>"109726977412856_153207216398165/insights/post_clicks/lifetime"},
+              {:name=>"post_clicks_unique",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153207216398165/insights/post_clicks_unique/lifetime"},
+              {:name=>"post_engaged_fan",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153207216398165/insights/post_engaged_fan/lifetime"},
+              {:name=>"post_impressions",
+               :values=>[{:value=>1}],
+               :id=>
+                "109726977412856_153207216398165/insights/post_impressions/lifetime"},
+              {:name=>"post_impressions_unique",
+               :values=>[{:value=>1}],
+               :id=>
+                "109726977412856_153207216398165/insights/post_impressions_unique/lifetime"},
+              {:name=>"post_impressions_paid",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153207216398165/insights/post_impressions_paid/lifetime"},
+              {:name=>"post_impressions_paid_unique",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153207216398165/insights/post_impressions_paid_unique/lifetime"},
+              {:name=>"post_impressions_fan",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153207216398165/insights/post_impressions_fan/lifetime"},
+              {:name=>"post_impressions_fan_unique",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153207216398165/insights/post_impressions_fan_unique/lifetime"},
+              {:name=>"post_impressions_fan_paid",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153207216398165/insights/post_impressions_fan_paid/lifetime"},
+              {:name=>"post_impressions_fan_paid_unique",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153207216398165/insights/post_impressions_fan_paid_unique/lifetime"},
+              {:name=>"post_impressions_organic",
+               :values=>[{:value=>1}],
+               :id=>
+                "109726977412856_153207216398165/insights/post_impressions_organic/lifetime"},
+              {:name=>"post_impressions_organic_unique",
+               :values=>[{:value=>1}],
+               :id=>
+                "109726977412856_153207216398165/insights/post_impressions_organic_unique/lifetime"},
+              {:name=>"post_impressions_viral",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153207216398165/insights/post_impressions_viral/lifetime"},
+              {:name=>"post_impressions_viral_unique",
+               :values=>[{:value=>0}],
+               :id=>
+                "109726977412856_153207216398165/insights/post_impressions_viral_unique/lifetime"},
+              {:name=>"post_impressions_nonviral",
+               :values=>[{:value=>1}],
+               :id=>
+                "109726977412856_153207216398165/insights/post_impressions_nonviral/lifetime"},
+              {:name=>"post_impressions_nonviral_unique",
+               :values=>[{:value=>1}],
+               :id=>
+                "109726977412856_153207216398165/insights/post_impressions_nonviral_unique/lifetime"}],
+            :paging=>
+             {:previous=>
+               "https://graph.facebook.com/v7.0/109726977412856_153207216398165/insights?access_token=EAAsjz6AuZBbEBAJH9nt4fswMs9rBe9r7GO9XAKA8Iwz8i5nDxZBWwiqGAkzHdeOTSnzxjhi53aqWdAkgrZBWXWOz76wng3W6Ic52z8brJ5Mz9ZB5hBGZB75CHnDb1sTnXq7Rm8GKRRx48ERBJZCBpaHV2ZB1qflWtXxxujHV8iSZBJUhnE1AUn6RqfnjokbowLsZD&fields=name%2C+values&metric=post_engaged_users%2Cpost_negative_feedback%2Cpost_negative_feedback_unique%2Cpost_clicks%2Cpost_clicks_unique%2Cpost_engaged_fan%2Cpost_impressions%2Cpost_impressions_unique%2Cpost_impressions_paid%2Cpost_impressions_paid_unique%2Cpost_impressions_fan%2Cpost_impressions_fan_unique%2Cpost_impressions_fan_paid%2Cpost_impressions_fan_paid_unique%2Cpost_impressions_organic%2Cpost_impressions_organic_unique%2Cpost_impressions_viral%2Cpost_impressions_viral_unique%2Cpost_impressions_nonviral%2Cpost_impressions_nonviral_unique&since=1597042800&until=1597215600",
+              :next=>
+               "https://graph.facebook.com/v7.0/109726977412856_153207216398165/insights?access_token=EAAsjz6AuZBbEBAJH9nt4fswMs9rBe9r7GO9XAKA8Iwz8i5nDxZBWwiqGAkzHdeOTSnzxjhi53aqWdAkgrZBWXWOz76wng3W6Ic52z8brJ5Mz9ZB5hBGZB75CHnDb1sTnXq7Rm8GKRRx48ERBJZCBpaHV2ZB1qflWtXxxujHV8iSZBJUhnE1AUn6RqfnjokbowLsZD&fields=name%2C+values&metric=post_engaged_users%2Cpost_negative_feedback%2Cpost_negative_feedback_unique%2Cpost_clicks%2Cpost_clicks_unique%2Cpost_engaged_fan%2Cpost_impressions%2Cpost_impressions_unique%2Cpost_impressions_paid%2Cpost_impressions_paid_unique%2Cpost_impressions_fan%2Cpost_impressions_fan_unique%2Cpost_impressions_fan_paid%2Cpost_impressions_fan_paid_unique%2Cpost_impressions_organic%2Cpost_impressions_organic_unique%2Cpost_impressions_viral%2Cpost_impressions_viral_unique%2Cpost_impressions_nonviral%2Cpost_impressions_nonviral_unique&since=1597388400&until=1597561200"}},
+          :id=>"109726977412856_153207216398165"}],
+       :paging=>
+        {:cursors=>
+          {:before=>
+            "QVFIUjY3TXU0NXhOMjMzdGxOX1R3ZAlE1a1daeHJHNFdESk1PV0tnX2lIX1JDTDh5TEUzRUJUcGw4M1drTl9BM2VfRnMwLWFiTHpSY09JWU9XX0FDVnFhY1RNTWFIMDJ2NUxnaEZALZAy04bUxSUUQwTHlKc0JhUVRFMEgyV1B0OEFnWG5i",
+           :after=>
+            "QVFIUlJQckNfcklKUDlUbm9sZAXpGZAGZAsT09ERGFzd09LbWpwNHlWazNOVDFhRE9fZA19LU2dQRVViSjJWN2VZAcjh3RXBMRFFrTlZA3cU5qVWFLeHdvRlJKaTJybmg3UnlnUi1zZAzJNWXdjOWhScWJMT1lWa2t6UElHZAEI3bVNHOXQ2VV9j"}}}
     end
   end
 end
