@@ -239,6 +239,7 @@ DEPENDENCIES
   capybara (>= 2.15)
   faraday
   google-api-client (~> 0.43.0)
+  googleauth
   jbuilder (~> 2.7)
   jwt
   listen (~> 3.2)

@@ -56,3 +56,4 @@ gem 'faraday'
 gem 'jwt'
 
 gem "google-api-client", "~> 0.43.0"
+gem "googleauth"
