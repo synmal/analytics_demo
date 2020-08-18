@@ -9,8 +9,8 @@ class GSheets::SheetsService
       sheets_service = set_auth
       # GSheets::SheetsService.push_data
       # zoom_analytics(sheets_service)
-      sendgrid_analytics(sheets_service)
-      # facebook_analytics(sheets_service)
+      # sendgrid_analytics(sheets_service)
+      facebook_analytics(sheets_service)
       # google_analytics(sheets_service)
       # ig_analytics(sheets_service)
     end
@@ -67,6 +67,8 @@ class GSheets::SheetsService
     end
 
     def facebook_analytics(sheets)
+      ## Columns
+      # Post ID | Permalink | Post Message | Type | Countries | Languages | Posted | Audience Targeting | Lifetime Post Total Impressions | Lifetime Post Organic Impressions | Lifetime Post organic reach | Lifetime Post Paid Impressions | Lifetime Post Paid Reach | Lifetime Post Total Reach | Lifetime Engaged Users | Lifetime Negative Feedback | Lifetime People who have liked your Page and engaged with your post | Lifetime Average time video viewed | Lifetime Total Video View Time (in MS) | Lifetime Total Video Views | Lifetime Total 30-Second Views | Lifetime Organic 30-Second Views | Lifetime Paid 30-Second Views | Lifetime Paid Video Views | Lifetime Organic Video Views
       response = Analytics::FacebookPageService.get_posts
       facebook_analytics = response[:data].map do |resp|
         row = []
