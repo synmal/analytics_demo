@@ -8,11 +8,11 @@ class GSheets::SheetsService
 
     def push_data
       sheets_service = set_auth
-      zoom_analytics(sheets_service)
-      sendgrid_analytics(sheets_service)
-      facebook_analytics(sheets_service)
+      # zoom_analytics(sheets_service)
+      # sendgrid_analytics(sheets_service)
+      # facebook_analytics(sheets_service)
       google_analytics(sheets_service)
-      ig_analytics(sheets_service)
+      # ig_analytics(sheets_service)
     end
 
     private
@@ -57,11 +57,26 @@ class GSheets::SheetsService
     end
 
     def google_analytics(sheets)
+      ### ALL IN ALPHABET ORDER
+      ## SOCIAL MEDIA
+      # (not set) | Blogger | Facebook | Instagram | Instagram Stories | LinkedIn
+      ## CAMPAIGN
+      # cpc-inf-ecom-page-showcase | cpc-intro-in-sv | cpc-how-to-setup | PENJANAeCommerceMSME | Get Influencers To Sell Your Products For You
       analytics = Analytics::GoogleAnalyticsService.get_data
-      analytics_stats = analytics.reports.first.data.totals.first.values
-      analytics_stats.unshift("#{(Date.today - 7.days).strftime('%d %B %Y')} - #{Date.today.strftime('%d %B %Y')}")
-      value_range_object = Google::Apis::SheetsV4::ValueRange.new(values: [analytics_stats])
-      sheets.append_spreadsheet_value(SPREADSHEET_ID, 'Google Analytics!A1', value_range_object, value_input_option: 'RAW')
+      analytics.reports.each do |rp|
+        case rp.column_header.dimensions
+        when ["ga:socialNetwork"]
+          sheet_name = 'Google Analytics(Social Network)!A3'
+        when ["ga:campaign"]
+          sheet_name = 'Google Analytics(Campaigns)!A3'
+        end
+
+        data = rp.data.rows.map{ |dt| dt.metrics.map(&:values) }.flatten
+        # byebug
+        data.unshift("#{Date.today - 7.days} - #{Date.today}")
+        value_range_object = Google::Apis::SheetsV4::ValueRange.new(values: [data])
+        sheets.append_spreadsheet_value(SPREADSHEET_ID, sheet_name, value_range_object, value_input_option: 'RAW')
+      end
     end
 
     def ig_analytics(sheets)
@@ -72,3 +87,5 @@ class GSheets::SheetsService
     end
   end
 end
+
+orders.as_json(only: [:cart_order_code, :transactions_status]).filter {|a| a['transactions_status'] != 20 }
