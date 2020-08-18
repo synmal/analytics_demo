@@ -1,17 +1,17 @@
 require 'google/apis/sheets_v4'
 
 class GSheets::SheetsService
-
   class << self
     SCOPE = 'https://www.googleapis.com/auth/spreadsheets'
     SPREADSHEET_ID = '1G-LUggXthl9aXk6LwpqJY2A4ItjYFHd_lk3Pp5GDi2g'
 
     def push_data
       sheets_service = set_auth
-      # zoom_analytics(sheets_service)
+      # GSheets::SheetsService.push_data
+      zoom_analytics(sheets_service)
       # sendgrid_analytics(sheets_service)
       # facebook_analytics(sheets_service)
-      google_analytics(sheets_service)
+      # google_analytics(sheets_service)
       # ig_analytics(sheets_service)
     end
 
@@ -23,9 +23,18 @@ class GSheets::SheetsService
       _service
     end
 
+    def get_current_data(sheets, sheet_range)
+      sheets.get_spreadsheet_values(SPREADSHEET_ID, sheet_range)
+    end
+
     def zoom_analytics(sheets)
-      zoom_stats = Analytics::ZoomService.get_webinar_full_stats
-      value_range_object = Google::Apis::SheetsV4::ValueRange.new(values: zoom_stats.map{|st| st.values})
+      ## COLUMNS
+      # Topic | Webinar ID | Actual Start Time | Actual Duration (minutes) | # Registered | # Cancelled | Unique Viewers | Total Users | Max Concurrent Views | % Attended | Audience
+      current_data = get_current_data(sheets, 'Zoom!A2:G')
+      reported_webinar_ids = current_data.values.map{|cd| cd[1]}
+      # byebug
+      zoom_stats = Analytics::ZoomService.get_webinar_full_stats(reported_webinar_ids.last)
+      value_range_object = Google::Apis::SheetsV4::ValueRange.new(values: zoom_stats.map{|st| st.except(:webinar_uuid).values})
       sheets.append_spreadsheet_value(SPREADSHEET_ID, 'Zoom!A1', value_range_object, value_input_option: 'RAW')
     end
 
@@ -88,4 +97,4 @@ class GSheets::SheetsService
   end
 end
 
-orders.as_json(only: [:cart_order_code, :transactions_status]).filter {|a| a['transactions_status'] != 20 }
+# orders.as_json(only: [:cart_order_code, :transactions_status]).filter {|a| a['transactions_status'] != 20 }
