@@ -2,27 +2,6 @@ require 'google/apis/analyticsreporting_v4'
 class Analytics::GoogleAnalyticsService
   class << self
     SCOPE = 'https://www.googleapis.com/auth/analytics.readonly'
-    METRICS = [
-      # 'ga:users'
-      # 'ga:newUsers'
-      # 'ga:sessions',
-      # 'ga:bounces',
-      # 'ga:bounceRate'
-      # 'ga:pageviews',
-      # 'ga:hits',
-      # 'ga:organicSearches'
-      'ga:pageviews'
-    ]
-
-    DIMENSIONS = [
-      # 'ga:userType'
-      # 'ga:acquisitionTrafficChannel'
-      # 'ga:sourceMedium',
-      # 'ga:keyword'
-      # 'ga:browser'
-      # 'ga:pagePath'
-      'ga:pagePath'
-    ]
 
     def get_data
       analytics = set_auth
@@ -32,13 +11,8 @@ class Analytics::GoogleAnalyticsService
       request = Google::Apis::AnalyticsreportingV4::GetReportsRequest.new(
         {
           report_requests: [
-            Google::Apis::AnalyticsreportingV4::ReportRequest.new(
-              view_id: '215727737',
-              sampling_level: 'LARGE',
-              metrics: generate_metric,
-              dimensions: generate_dimensions,
-              order_bys: [Google::Apis::AnalyticsreportingV4::OrderBy.new(sort_order: 'DESCENDING', field_name: 'ga:pageviews')]
-            )
+            generate_report_request(['ga:users', 'ga:newUsers', 'ga:sessions', 'ga:bounceRate'], ['ga:socialNetwork']),
+            generate_report_request(['ga:users', 'ga:newUsers', 'ga:sessions', 'ga:bounceRate'], ['ga:campaign']),
           ]
         }
       )
@@ -53,16 +27,25 @@ class Analytics::GoogleAnalyticsService
       _service
     end
 
-    def generate_metric
-      METRICS.map do |metric|
+    def generate_metric(metrics)
+      metrics.map do |metric|
         Google::Apis::AnalyticsreportingV4::Metric.new(expression: metric)
       end
     end
 
-    def generate_dimensions
-      DIMENSIONS.map do |dim|
+    def generate_dimensions(dimensions)
+      dimensions.map do |dim|
         Google::Apis::AnalyticsreportingV4::Dimension.new(name: dim)
       end
+    end
+
+    def generate_report_request(metrics, dimensions)
+      Google::Apis::AnalyticsreportingV4::ReportRequest.new(
+        view_id: '215727737',
+        sampling_level: 'LARGE',
+        metrics: generate_metric(metrics),
+        dimensions: generate_dimensions(dimensions)
+      )
     end
   end
 end
