@@ -1,8 +1,8 @@
 class Analytics::ZoomService
   class << self
-    def get_webinar_full_stats(reported_webinar_id)
+    def get_webinar_full_stats(reported_webinar_id = nil)
       webinars = get_webinar_lists[:webinars]
-      last_position = webinars.find_index{|wb| wb[:id] == reported_webinar_id.to_i}
+      last_position = reported_webinar_id ? webinars.find_index{|wb| wb[:id] == reported_webinar_id.to_i} : -1
 
       webinar_stats = webinars[(last_position + 1)..].map do |web|
         stats = get_webinar_stats(web[:id])

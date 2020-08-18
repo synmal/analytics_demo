@@ -8,8 +8,8 @@ class GSheets::SheetsService
     def push_data
       sheets_service = set_auth
       # GSheets::SheetsService.push_data
-      zoom_analytics(sheets_service)
-      # sendgrid_analytics(sheets_service)
+      # zoom_analytics(sheets_service)
+      sendgrid_analytics(sheets_service)
       # facebook_analytics(sheets_service)
       # google_analytics(sheets_service)
       # ig_analytics(sheets_service)
@@ -31,22 +31,39 @@ class GSheets::SheetsService
       ## COLUMNS
       # Topic | Webinar ID | Actual Start Time | Actual Duration (minutes) | # Registered | # Cancelled | Unique Viewers | Total Users | Max Concurrent Views | % Attended | Audience
       current_data = get_current_data(sheets, 'Zoom!A2:G')
-      reported_webinar_ids = current_data.values.map{|cd| cd[1]}
-      # byebug
-      zoom_stats = Analytics::ZoomService.get_webinar_full_stats(reported_webinar_ids.last)
+      reported_webinar_ids = current_data&.values&.map{|cd| cd[1]}
+      zoom_stats = Analytics::ZoomService.get_webinar_full_stats(reported_webinar_ids&.last)
       value_range_object = Google::Apis::SheetsV4::ValueRange.new(values: zoom_stats.map{|st| st.except(:webinar_uuid).values})
       sheets.append_spreadsheet_value(SPREADSHEET_ID, 'Zoom!A1', value_range_object, value_input_option: 'RAW')
     end
 
     def sendgrid_analytics(sheets)
-      single_send_ids = Analytics::SendgridMarketingService.get_single_send.map{|ss| {id: ss[:id], title: ss[:name]}}
-      analytics = single_send_ids.map{ |ss| Analytics::SendgridMarketingService.get_stats_by_single_send(ss[:id]) }.flatten
-      analytics_stats = analytics.map.with_index{|as, index| 
-        as[:stats].values.unshift(single_send_ids[index][:title])
-      }
+      ## COLUMNS
+      # Single Send ID | Single Send Name | Date | Delivered | Unique Opens | Unique Clicks | Unsubscribes
+      current_data = get_current_data(sheets, 'Sendgrid!A2:G')
+      last_reported_id = current_data&.values&.last&.first
+      single_sends = Analytics::SendgridMarketingService.get_single_send
 
-      value_range_object = Google::Apis::SheetsV4::ValueRange.new(values: analytics_stats)
-      sheets.append_spreadsheet_value(SPREADSHEET_ID, 'Sendgrid!A1', value_range_object, value_input_option: 'RAW')
+      if last_reported_id
+        last_reported_index = single_sends.find_index{|ss| ss[:id]}
+        single_sends = single_sends[(last_reported_index + 1)..]
+      end
+
+      analytics_stats = single_sends.map do |ss|
+        ss_stats = Analytics::SendgridMarketingService.get_stats_by_single_send(ss[:id]).first[:stats]
+        {
+          id: ss[:id],
+          name: ss[:name],
+          send_at: (Date.parse(ss[:send_at]) rescue nil),
+          delivered: ss_stats[:delivered],
+          unique_opens: ss_stats[:unique_opens],
+          unique_clicks: ss_stats[:unique_clicks],
+          unsubscribes: ss_stats[:unsubscribes]
+        }
+      end
+
+      value_range_object = Google::Apis::SheetsV4::ValueRange.new(values: analytics_stats.map(&:values))
+      sheets.append_spreadsheet_value(SPREADSHEET_ID, 'Sendgrid!A2', value_range_object, value_input_option: 'RAW')
     end
 
     def facebook_analytics(sheets)
@@ -96,5 +113,3 @@ class GSheets::SheetsService
     end
   end
 end
-
-# orders.as_json(only: [:cart_order_code, :transactions_status]).filter {|a| a['transactions_status'] != 20 }
