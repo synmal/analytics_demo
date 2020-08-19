@@ -21,13 +21,13 @@ class Analytics::InstagramService
     end
 
     def get_ig_posts_with_insights
-      fields = 'media.limit(100){id, permalink, comments_count, like_count, insights.metric(engagement,impressions,reach,saved,video_views)}'
+      fields = 'media.limit(100){id, permalink, caption, timestamp, comments_count, like_count, insights.metric(engagement,impressions,reach,saved,video_views)}'
       response = call(fields)
       parse_response(response)
     end
 
     def get_ig_posts
-      fields = 'media.limit(100){id, permalink, comments_count, like_count}'
+      fields = 'media.limit(100){id, permalink, caption, timestamp, comments_count, like_count}'
       response = call(fields)
       parse_response(response)
     end

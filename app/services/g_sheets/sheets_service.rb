@@ -11,8 +11,8 @@ class GSheets::SheetsService
       # zoom_analytics(sheets_service)
       # sendgrid_analytics(sheets_service)
       # facebook_analytics(sheets_service)
-      google_analytics(sheets_service)
-      # ig_analytics(sheets_service)
+      # google_analytics(sheets_service)
+      ig_analytics(sheets_service)
     end
 
     private
@@ -128,10 +128,33 @@ class GSheets::SheetsService
     end
 
     def ig_analytics(sheets)
+      current_data = get_current_data(sheets, 'Instagram!A2:J').values || []
       posts = Analytics::InstagramService.get_posts
-      posts_stats = posts.dig(:media, :data)&.map{|ps| ps.values}
+
+      posts_stats = posts.dig(:media, :data)&.map do |ps|
+        caption = ps[:caption] || ""
+
+        if ps.dig(:insights, :data)
+          insights = ps.dig(:insights, :data).map do |ins|
+            ins.dig(:values)&.first&.dig(:value)
+          end
+        end
+
+        [ps[:id], ps[:permalink], ps[:caption], (DateTime.parse(ps[:timestamp]) + 8.hours).strftime('%d/%m/%Y - %I:%M %p'), ps[:comments_count], ps[:like_count], ps[:comment_count]] + (insights || [])
+      end
+
+      posts_stats.each_with_index do |pss, index|
+        if pss.first == current_data[index]&.first
+          current_data[index] = pss
+        else
+          current_data << pss
+        end
+      end
+
+      current_data.sort { |cd| -(DateTime.parse(cd[3]).to_i) }
+
       value_range_object = Google::Apis::SheetsV4::ValueRange.new(values: posts_stats)
-      sheets.append_spreadsheet_value(SPREADSHEET_ID, 'Instagram!A1', value_range_object, value_input_option: 'RAW')
+      sheets.update_spreadsheet_value(SPREADSHEET_ID, 'Instagram!A2', value_range_object, value_input_option: 'RAW')
     end
   end
 end
