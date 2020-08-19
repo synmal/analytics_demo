@@ -7,11 +7,10 @@ class GSheets::SheetsService
 
     def push_data
       sheets_service = set_auth
-      # GSheets::SheetsService.push_data
-      # zoom_analytics(sheets_service)
-      # sendgrid_analytics(sheets_service)
-      # facebook_analytics(sheets_service)
-      # google_analytics(sheets_service)
+      zoom_analytics(sheets_service)
+      sendgrid_analytics(sheets_service)
+      facebook_analytics(sheets_service)
+      google_analytics(sheets_service)
       ig_analytics(sheets_service)
     end
 
@@ -36,8 +35,6 @@ class GSheets::SheetsService
     end
 
     def sendgrid_analytics(sheets)
-      ## COLUMNS
-      # Single Send ID | Single Send Name | Date | Delivered | Unique Opens | Unique Clicks | Unsubscribes
       current_data = get_current_data(sheets, 'Sendgrid!A2:G')
       last_reported_id = current_data&.values&.last&.first
       single_sends = Analytics::SendgridMarketingService.get_single_send
