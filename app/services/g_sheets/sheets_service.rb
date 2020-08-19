@@ -10,8 +10,8 @@ class GSheets::SheetsService
       # GSheets::SheetsService.push_data
       # zoom_analytics(sheets_service)
       # sendgrid_analytics(sheets_service)
-      facebook_analytics(sheets_service)
-      # google_analytics(sheets_service)
+      # facebook_analytics(sheets_service)
+      google_analytics(sheets_service)
       # ig_analytics(sheets_service)
     end
 
@@ -28,8 +28,6 @@ class GSheets::SheetsService
     end
 
     def zoom_analytics(sheets)
-      ## COLUMNS
-      # Topic | Webinar ID | Actual Start Time | Actual Duration (minutes) | # Registered | # Cancelled | Unique Viewers | Total Users | Max Concurrent Views | % Attended | Audience
       current_data = get_current_data(sheets, 'Zoom!A2:G')
       reported_webinar_ids = current_data&.values&.map{|cd| cd[1]}
       zoom_stats = Analytics::ZoomService.get_webinar_full_stats(reported_webinar_ids&.last)
@@ -67,8 +65,6 @@ class GSheets::SheetsService
     end
 
     def facebook_analytics(sheets)
-      ## Columns
-      # Post ID | Permalink | Post Message | Type | Countries | Languages | Posted | Audience Targeting | Lifetime Post Total Impressions | Lifetime Post Organic Impressions | Lifetime Post organic reach | Lifetime Post Paid Impressions | Lifetime Post Paid Reach | Lifetime Post Total Reach | Lifetime Engaged Users | Lifetime Negative Feedback | Lifetime People who have liked your Page and engaged with your post | Lifetime Average time video viewed | Lifetime Total Video View Time (in MS) | Lifetime Total Video Views | Lifetime Total 30-Second Views | Lifetime Organic 30-Second Views | Lifetime Paid 30-Second Views | Lifetime Paid Video Views | Lifetime Organic Video Views
       response = Analytics::FacebookPageService.get_posts
 
       current_data = get_current_data(sheets, 'Facebook!A2:V').values || []
@@ -104,11 +100,6 @@ class GSheets::SheetsService
     end
 
     def google_analytics(sheets)
-      ### ALL IN ALPHABET ORDER
-      ## SOCIAL MEDIA
-      # (not set) | Blogger | Facebook | Instagram | Instagram Stories | LinkedIn
-      ## CAMPAIGN
-      # cpc-inf-ecom-page-showcase | cpc-intro-in-sv | cpc-how-to-setup | PENJANAeCommerceMSME | Get Influencers To Sell Your Products For You
       analytics = Analytics::GoogleAnalyticsService.get_data
       analytics.reports.each do |rp|
         case rp.column_header.dimensions
@@ -118,11 +109,21 @@ class GSheets::SheetsService
           sheet_name = 'Google Analytics(Campaigns)!A3'
         end
 
-        data = rp.data.rows.map{ |dt| dt.metrics.map(&:values) }.flatten
-        # byebug
-        data.unshift("#{Date.today - 7.days} - #{Date.today}")
-        value_range_object = Google::Apis::SheetsV4::ValueRange.new(values: [data])
-        sheets.append_spreadsheet_value(SPREADSHEET_ID, sheet_name, value_range_object, value_input_option: 'RAW')
+        current_data = get_current_data(sheets, "#{sheet_name}:F").values || []
+        new_data = rp.data.rows.map.with_index do |data, index|
+          if index == 0
+            date = "#{(Date.today - 7.days).strftime('%d/%m/%Y')} - #{Date.today.strftime('%d/%m/%Y')}"
+            [date, data.dimensions.join(','), data.metrics.first.values].flatten
+          else
+            ["", data.dimensions.join(','), data.metrics.first.values].flatten
+          end
+        end
+
+        new_data << Array.new(6, "")
+        combined_data = new_data + current_data
+
+        value_range_object = Google::Apis::SheetsV4::ValueRange.new(values: combined_data)
+        sheets.update_spreadsheet_value(SPREADSHEET_ID, sheet_name, value_range_object, value_input_option: 'RAW')
       end
     end
 
