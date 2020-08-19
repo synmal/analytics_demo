@@ -70,18 +70,37 @@ class GSheets::SheetsService
       ## Columns
       # Post ID | Permalink | Post Message | Type | Countries | Languages | Posted | Audience Targeting | Lifetime Post Total Impressions | Lifetime Post Organic Impressions | Lifetime Post organic reach | Lifetime Post Paid Impressions | Lifetime Post Paid Reach | Lifetime Post Total Reach | Lifetime Engaged Users | Lifetime Negative Feedback | Lifetime People who have liked your Page and engaged with your post | Lifetime Average time video viewed | Lifetime Total Video View Time (in MS) | Lifetime Total Video Views | Lifetime Total 30-Second Views | Lifetime Organic 30-Second Views | Lifetime Paid 30-Second Views | Lifetime Paid Video Views | Lifetime Organic Video Views
       response = Analytics::FacebookPageService.get_posts
-      facebook_analytics = response[:data].map do |resp|
+
+      current_data = get_current_data(sheets, 'Facebook!A2:V').values || []
+
+      facebook_analytics = response.dig(:posts, :data).map do |resp|
         row = []
+        row << resp[:id]
         row << resp[:permalink_url]
         row << resp[:message]
+        row << resp.dig(:attachments, :data)&.first&.dig(:media_type)&.titleize || 'Status'
+        row << (DateTime.parse(resp[:created_time]) + 8.hours).strftime('%d/%m/%Y - %I:%M %p')
         resp.dig(:insights, :data).each do |ins|
           row << ins[:values].first[:value]
         end
         row
       end
 
+      facebook_analytics.each do |fa|
+        current_data.deep_dup.each_with_index do |cd, i|
+          if cd.include? fa[0]
+            current_data[i] = fa
+            break
+          else
+            current_data << fa
+            break
+          end
+        end
+      end
+
+      current_data.sort { |cd| -(DateTime.parse(cd[4]).to_i) }
       value_range_object = Google::Apis::SheetsV4::ValueRange.new(values: facebook_analytics)
-      sheets.append_spreadsheet_value(SPREADSHEET_ID, 'Facebook!A1', value_range_object, value_input_option: 'RAW')
+      sheets.update_spreadsheet_value(SPREADSHEET_ID, 'Facebook!A2', value_range_object, value_input_option: 'RAW')
     end
 
     def google_analytics(sheets)

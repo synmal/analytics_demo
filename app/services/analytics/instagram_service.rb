@@ -10,7 +10,7 @@ class Analytics::InstagramService
 
     private
     def call(fields = '')
-      Faraday.get("https://graph.facebook.com/v7.0/#{Rails.application.credentials.instagram[:id]}") do |req|
+      Faraday.get("https://graph.facebook.com/v8.0/#{Rails.application.credentials.instagram[:id]}") do |req|
         req.params['access_token'] = Rails.application.credentials.instagram[:access_token]
         req.params['fields'] = fields
       end
