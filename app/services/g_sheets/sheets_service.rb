@@ -7,11 +7,11 @@ class GSheets::SheetsService
 
     def push_data
       sheets_service = set_auth
-      zoom_analytics(sheets_service)
+      # zoom_analytics(sheets_service)
       sendgrid_analytics(sheets_service)
-      facebook_analytics(sheets_service)
-      google_analytics(sheets_service)
-      ig_analytics(sheets_service)
+      # facebook_analytics(sheets_service)
+      # google_analytics(sheets_service)
+      # ig_analytics(sheets_service)
     end
 
     private
@@ -35,21 +35,15 @@ class GSheets::SheetsService
     end
 
     def sendgrid_analytics(sheets)
-      current_data = get_current_data(sheets, 'Sendgrid!A2:G')
-      last_reported_id = current_data&.values&.last&.first
+      current_data = get_current_data(sheets, 'Sendgrid!A2:G')&.values || []
       single_sends = Analytics::SendgridMarketingService.get_single_send
-
-      if last_reported_id
-        last_reported_index = single_sends.find_index{|ss| ss[:id]}
-        single_sends = single_sends[(last_reported_index + 1)..]
-      end
 
       analytics_stats = single_sends.map do |ss|
         ss_stats = Analytics::SendgridMarketingService.get_stats_by_single_send(ss[:id]).first[:stats]
         {
           id: ss[:id],
           name: ss[:name],
-          send_at: (Date.parse(ss[:send_at]) rescue nil),
+          send_at: (DateTime.parse(ss[:send_at]) rescue nil),
           delivered: ss_stats[:delivered],
           unique_opens: ss_stats[:unique_opens],
           unique_clicks: ss_stats[:unique_clicks],
@@ -57,8 +51,20 @@ class GSheets::SheetsService
         }
       end
 
-      value_range_object = Google::Apis::SheetsV4::ValueRange.new(values: analytics_stats.map(&:values))
-      sheets.append_spreadsheet_value(SPREADSHEET_ID, 'Sendgrid!A2', value_range_object, value_input_option: 'RAW')
+      current_ids = current_data&.map{|cd| cd[0]}
+
+      analytics_stats.map(&:values).each do |av|
+        current_data_index = current_ids.find_index(av[0])
+        if current_data_index
+          current_data[current_data_index] = av
+        else
+          current_data << av
+        end
+      end
+
+      current_data.sort_by! { |cd| -(cd[2].to_i) }
+      value_range_object = Google::Apis::SheetsV4::ValueRange.new(values: current_data)
+      sheets.update_spreadsheet_value(SPREADSHEET_ID, 'Sendgrid!A2', value_range_object, value_input_option: 'RAW')
     end
 
     def facebook_analytics(sheets)
